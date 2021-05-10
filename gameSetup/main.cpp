@@ -145,6 +145,58 @@ extern "C" __declspec(dllexport) void onCreate(GameMemory* mem, HeapMemory * hea
 
 }
 
+template<class T>
+T min(T a, T b, T c)
+{
+	return std::min(std::min(a, b), c);
+}
+
+template<class T>
+T max(T a, T b, T c)
+{
+	return std::max(std::max(a, b), c);
+}
+
+template<class T>
+T min(T a, T b, T c, T d)
+{
+	return std::min(min(a, b, c), d);
+}
+
+template<class T>
+T max(T a, T b, T c, T d)
+{
+	return std::max(max(a, b, c), d);
+}
+
+inline void barycentric2(Vec2f p, Vec2f p0, Vec2f p1, Vec2f p2, float &u, float &v)
+{
+	float x = p.x;
+	float y = p.y;
+
+	float a = p0.x - p1.x;
+	float b = p0.x - p2.x;
+	float c = p0.x - x;
+	float d = p0.y - p1.y;
+	float e = p0.y - p2.y;
+	float f = p0.y - y;
+
+	float div = (a * e - b * d);
+
+	if (div == 0)
+	{
+		u = 0;
+		v = 0;
+	}
+	else
+	{
+		u = (c * e - b * f) / div;
+		v = (f * a - d * c) / div;
+	}
+
+};
+
+
 glm::ivec3 red{255, 0, 0};
 glm::ivec3 white{255, 255, 255};
 glm::ivec3 green{0, 255, 0};
@@ -338,8 +390,67 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 		u = glm::clamp(u, 0.f, 1.f);
 		v = glm::clamp(v, 0.f, 1.f);
 
-	}
-	;
+	};
+
+	auto triangle2 = [windowBuffer, line, mem, depthCalculation, w, h]
+	(Vec3f T0, Vec3f T1, Vec3f T2, glm::ivec3 color, Vec2f textureUV0, Vec2f textureUV1, Vec2f textureUV2)
+	{
+		glm::ivec2 clipMin = { min(T0.x, T1.x, T2.x), min(T0.y, T1.y, T2.y) };
+		glm::ivec2 clipMax = { max(T0.x, T1.x, T2.x), max(T0.y, T1.y, T2.y) };
+		
+		clipMin = glm::clamp(clipMin, { 0,0 }, { w - 1 , h - 1 });
+		clipMax = glm::clamp(clipMax, { 0,0 }, { w - 1 , h - 1 });
+
+		float z0 = T0.z;
+		float z1 = T1.z;
+		float z2 = T2.z;
+		Vec2f t0 = { T0.x, T0.y };
+		Vec2f t1 = { T1.x, T1.y };
+		Vec2f t2 = { T2.x, T2.y };
+
+		for (int y = clipMin.y; y <= clipMax.y; y++)
+		{
+			for (int x = clipMin.x; x <= clipMax.x; x++)
+			{
+				float u = 0;
+				float v = 0;
+				barycentric2(Vec2f(x, y), t0, t1, t2, u, v);
+				
+				if (u < 0 || v < 0 || u + v > 1)
+				{
+					continue;
+				}
+
+				Vec2f uvs[3] = { textureUV0, textureUV1, textureUV2 };
+				float tu = (1 - u - v) * uvs[0].x + u * uvs[1].x + v * uvs[2].x;
+				float tv = (1 - u - v) * uvs[0].y + u * uvs[1].y + v * uvs[2].y;
+
+				tu *= mem->texture.w;
+				tv *= mem->texture.h;
+				int itu = floor(tu);
+				int itv = floor(tv);
+				unsigned char r = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 0];
+				unsigned char g = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 1];
+				unsigned char b = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 2];
+
+				float z = (1 - u - v) * z0 + u * z1 + v * z2;
+				float depth = depthCalculation(z);
+				if (depth == -1) { continue; }
+
+				float light = color.r / 255.f;
+
+				if (depth < mem->zBuffer[x + y * w])
+				{
+					mem->zBuffer[x + y * w] = depth;
+					windowBuffer->drawAt(x, y, r * light, g * light, b * light);
+					//windowBuffer->drawAt(x, y, color.r, color.g, color.b);
+				};
+
+			}
+		}
+	
+
+	};
 
 	auto triangle = [windowBuffer, line, mem, depthCalculation, w, h, barycentric]
 	(Vec3f T0, Vec3f T1, Vec3f T2, glm::ivec3 color, Vec2f textureUV0, Vec2f textureUV1, Vec2f textureUV2)
@@ -533,7 +644,7 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 		float intensity = n * light_dir;
 		if (intensity > 0)
 		{
-			triangle(screen_coords[0], screen_coords[1], screen_coords[2],
+			triangle2(screen_coords[0], screen_coords[1], screen_coords[2],
 				glm::vec3(intensity * 255, intensity * 255, intensity * 255),
 				textureUVs[0], textureUVs[1], textureUVs[2] );
 		
