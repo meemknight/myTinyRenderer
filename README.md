@@ -3,7 +3,7 @@ Inspired by https://github.com/ssloy/tinyrenderer this is my implementation of a
 
 ---
 
-![ice](https://github.com/meemknight/photos/blob/master/tynyRenderer1.png)
+![](https://github.com/meemknight/photos/blob/master/tynyRenderer1.png)
 
 
 features:
