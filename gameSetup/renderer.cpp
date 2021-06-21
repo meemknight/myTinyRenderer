@@ -72,6 +72,23 @@ void Renderer::clearDepth()
 	}
 }
 
+//todo move this to a stage before
+auto depthCalculation = [](float z)->float
+{
+	float closePlane = -10; float farPlane = -40;
+	float val = ((1.f / z - 1.f / closePlane) / (1.f / farPlane - 1.f / closePlane));
+	//float val = (z - closePlane) / (farPlane - closePlane);
+
+	if (val < 0 || val > 1)
+	{
+		return -1.f;
+	}
+
+	val = glm::clamp(val, 0.f, 1.f);
+	return val;
+};
+
+
 void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T2, glm::vec3 color)
 {
 	glm::fvec2 clipMinF = { min(T0.x, T1.x, T2.x), min(T0.y, T1.y, T2.y) };
@@ -125,18 +142,18 @@ void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T
 
 			float z = (1 - u - v) * z0 + u * z1 + v * z2; //trilinear interpolation
 			//float depth = depthCalculation(z);
-			float depth = z;
+			float depth = depthCalculation(z);
 			//if (depth <= -1) { continue; }
 			//todo clip behind camera
 
 			//float light = color.r / 255.f;
-			float light = 1;
+			//float light = 1;
 
-			//if (depth < zBuffer[x + y * w]) ignore z buffer for now
+			if (depth < zBuffer[x + y * w]) 
 			{
-				//zBuffer[x + y * w] = depth;
-				windowBuffer->drawAt(x, y, r * light, g * light, b * light);
-				//windowBuffer->drawAt(x, y, color.r, color.g, color.b);
+				zBuffer[x + y * w] = depth;
+				//windowBuffer->drawAt(x, y, r * light, g * light, b * light);
+				windowBuffer->drawAt(x, y, color.r * 255, color.g * 255, color.b * 255);
 			};
 
 		}

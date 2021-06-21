@@ -617,7 +617,7 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 	//}
 	srand(0);
 
-	Vec3f light_dir(0, 0, -1);
+	glm::vec3 light_dir(0, 0, -1);
 
 	//mem->renderer.renderTriangleInClipSpace(
 	//	glm::vec3(-0.5, 0.5, 1),
@@ -648,10 +648,7 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 
 		}
 
-		//Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
-		////Vec3f n = (world_coords[1] - world_coords[0]) ^ (world_coords[2] - world_coords[0]);
-		//n.normalize();
-		//float intensity = n * light_dir;
+	
 		//if (intensity > 0)
 		//{
 		//	triangle2(screen_coords[0], screen_coords[1], screen_coords[2],
@@ -663,7 +660,12 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 		//	//triangle(screen_coords[0], screen_coords[1], screen_coords[2], glm::vec3(0));
 		//}
 
-		mem->renderer.renderTriangleInClipSpace(world_coords[0], world_coords[1], world_coords[2], glm::vec3(1, 1, 1));
+		glm::vec3 n = glm::cross((world_coords[2] - world_coords[0]), (world_coords[1] - world_coords[0]));
+		//Vec3f n = (world_coords[1] - world_coords[0]) ^ (world_coords[2] - world_coords[0]);
+		n = glm::normalize(n);
+		float intensity = glm::dot(n, light_dir);
+		mem->renderer.renderTriangleInClipSpace(world_coords[0], world_coords[1], world_coords[2], 
+			glm::vec3(intensity));
 
 		//for(int i=0;i<3;i++)
 		//line(Vec2i(screen_coords[i].x, screen_coords[i].y), Vec2i(screen_coords[(i+1)%3].x, screen_coords[(i + 1) % 3].y), {255,255,255});
