@@ -138,7 +138,7 @@ extern "C" __declspec(dllexport) void onCreate(GameMemory* mem, HeapMemory * hea
 
 	mem->model.LoadFile("resources/obj/african_head.obj");
 
-	mem->renderer.create();
+	mem->renderer2D.create();
 
 	stbi_set_flip_vertically_on_load(1);
 	mem->texture.data = stbi_load("resources/african_head_diffuse.tga", &mem->texture.w, &mem->texture.h, nullptr, 3);
@@ -275,6 +275,10 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 	windowBuffer->clear();
 #pragma endregion
 	
+	mem->renderer.updateWindowMetrics(w, h);
+	mem->renderer.updateWindowBuffer(windowBuffer);
+	mem->renderer.clearDepth();
+
 	mem->zBuffer.resize(w * h);
 	for (auto &i : mem->zBuffer)
 	{
@@ -449,7 +453,6 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 			}
 		}
 	
-
 	};
 
 	auto triangle = [windowBuffer, line, mem, depthCalculation, w, h, barycentric]
@@ -616,12 +619,18 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 
 	Vec3f light_dir(0, 0, -1);
 
+	//mem->renderer.renderTriangleInClipSpace(
+	//	glm::vec3(-0.5, 0.5, 1),
+	//	glm::vec3(-0.2, -0.2, 1),
+	//	glm::vec3(0.5, 0.6, 1), 
+	//	glm::vec3(1, 1, 1));
+
 
 	for (int i = 0; i < mem->model.LoadedIndices.size()/3; i++)
 	{
 		std::vector<int> face = { (int)mem->model.LoadedIndices[i * 3], (int)mem->model.LoadedIndices[i * 3 + 1], (int)mem->model.LoadedIndices[i * 3] + 2 };
 		Vec3f screen_coords[3];
-		Vec3f world_coords[3];
+		glm::vec3 world_coords[3];
 		Vec2f textureUVs[3];
 
 		for (int j = 0; j < 3; j++)
@@ -638,20 +647,23 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 			textureUVs[j].y = v.TextureCoordinate.Y;
 
 		}
-		Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
-		//Vec3f n = (world_coords[1] - world_coords[0]) ^ (world_coords[2] - world_coords[0]);
-		n.normalize();
-		float intensity = n * light_dir;
-		if (intensity > 0)
-		{
-			triangle2(screen_coords[0], screen_coords[1], screen_coords[2],
-				glm::vec3(intensity * 255, intensity * 255, intensity * 255),
-				textureUVs[0], textureUVs[1], textureUVs[2] );
-		
-		}else
-		{
-			//triangle(screen_coords[0], screen_coords[1], screen_coords[2], glm::vec3(0));
-		}
+
+		//Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
+		////Vec3f n = (world_coords[1] - world_coords[0]) ^ (world_coords[2] - world_coords[0]);
+		//n.normalize();
+		//float intensity = n * light_dir;
+		//if (intensity > 0)
+		//{
+		//	triangle2(screen_coords[0], screen_coords[1], screen_coords[2],
+		//		glm::vec3(intensity * 255, intensity * 255, intensity * 255),
+		//		textureUVs[0], textureUVs[1], textureUVs[2] );
+		//
+		//}else
+		//{
+		//	//triangle(screen_coords[0], screen_coords[1], screen_coords[2], glm::vec3(0));
+		//}
+
+		mem->renderer.renderTriangleInClipSpace(world_coords[0], world_coords[1], world_coords[2], glm::vec3(1, 1, 1));
 
 		//for(int i=0;i<3;i++)
 		//line(Vec2i(screen_coords[i].x, screen_coords[i].y), Vec2i(screen_coords[(i+1)%3].x, screen_coords[(i + 1) % 3].y), {255,255,255});

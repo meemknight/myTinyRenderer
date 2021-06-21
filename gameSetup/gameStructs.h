@@ -4,10 +4,10 @@
 #include <string>
 #include <Windows.h>
 #include <gl2d.h>
-#include "Phisics.h"
 #include "../windowsPlatformLayer/Audio.h"
 #include "model.h"
 #include "OBJ_Loader.h"
+#include "renderer.h"
 
 struct CpuTexture
 {
@@ -24,8 +24,9 @@ struct GameMemory
 #pragma endregion
 
 
-	gl2d::Renderer2D renderer;
+	gl2d::Renderer2D renderer2D;
 	std::vector<float> zBuffer;
+	Renderer renderer;
 
 	objl::Loader model;
 
@@ -154,7 +155,7 @@ struct HeapMemory
 {
 
 	FreeListAllocator allocator;
-	char memory[MB(10)];
+	char memory[MB(20)];
 		
 };
 

@@ -163,7 +163,7 @@
     <ClCompile Include="freeListAllocator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model.cpp" />
-    <ClCompile Include="Phisics.cpp" />
+    <ClCompile Include="renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\windowsPlatformLayer\buildConfig.h" />
@@ -172,7 +172,7 @@
     <ClInclude Include="geometry.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="OBJ_Loader.h" />
-    <ClInclude Include="Phisics.h" />
+    <ClInclude Include="renderer.h" />
     <ClInclude Include="utility.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
