@@ -141,7 +141,8 @@ extern "C" __declspec(dllexport) void onCreate(GameMemory* mem, HeapMemory * hea
 	mem->renderer2D.create();
 
 	stbi_set_flip_vertically_on_load(1);
-	mem->texture.data = stbi_load("resources/african_head_diffuse.tga", &mem->texture.w, &mem->texture.h, nullptr, 3);
+	mem->renderer.texture.data = stbi_load("resources/african_head_diffuse.tga",
+		&mem->renderer.texture.w, &mem->renderer.texture.h, nullptr, 3);
 
 }
 
@@ -429,13 +430,13 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 				float tu = (1 - u - v) * uvs[0].x + u * uvs[1].x + v * uvs[2].x;
 				float tv = (1 - u - v) * uvs[0].y + u * uvs[1].y + v * uvs[2].y;
 
-				tu *= mem->texture.w;
-				tv *= mem->texture.h;
+				tu *= mem->renderer.texture.w;
+				tv *= mem->renderer.texture.h;
 				int itu = floor(tu);
 				int itv = floor(tv);
-				unsigned char r = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 0];
-				unsigned char g = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 1];
-				unsigned char b = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 2];
+				unsigned char r = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 0];
+				unsigned char g = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 1];
+				unsigned char b = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 2];
 
 				float z = (1 - u - v) * z0 + u * z1 + v * z2;
 				float depth = depthCalculation(z);
@@ -498,13 +499,13 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 				Vec2f uvs[3] = { textureUV0, textureUV1, textureUV2 };
 				float tu = (1 - u - v) * uvs[0].x + u * uvs[1].x + v * uvs[2].x;
 				float tv = (1 - u - v) * uvs[0].y + u * uvs[1].y + v * uvs[2].y;
-				tu *= mem->texture.w;
-				tv *= mem->texture.h;
+				tu *= mem->renderer.texture.w;
+				tv *= mem->renderer.texture.h;
 				int itu = floor(tu);
 				int itv = floor(tv);
-				unsigned char r = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 0];
-				unsigned char g = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 1];
-				unsigned char b = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 2];
+				unsigned char r = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 0];
+				unsigned char g = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 1];
+				unsigned char b = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 2];
 
 				float z = (1 - u - v) * z0 + u * z1 + v * z2;
 				float depth = depthCalculation(z);
@@ -557,13 +558,13 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 				Vec2f uvs[3] = { textureUV0, textureUV1, textureUV2 };
 				float tu = (1 - u - v) * uvs[0].x + u * uvs[1].x + v * uvs[2].x;
 				float tv = (1 - u - v) * uvs[0].y + u * uvs[1].y + v * uvs[2].y;
-				tu *= mem->texture.w;
-				tv *= mem->texture.h;
+				tu *= mem->renderer.texture.w;
+				tv *= mem->renderer.texture.h;
 				int itu = floor(tu);
 				int itv = floor(tv);
-				unsigned char r = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 0];
-				unsigned char g = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 1];
-				unsigned char b = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 2];
+				unsigned char r = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 0];
+				unsigned char g = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 1];
+				unsigned char b = mem->renderer.texture.data[(itu + itv * mem->renderer.texture.w) * 3 + 2];
 
 				float z = (1 - u - v) * z0 + u * z1 + v * z2;
 				float depth = depthCalculation(z);
@@ -631,7 +632,7 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 		std::vector<int> face = { (int)mem->model.LoadedIndices[i * 3], (int)mem->model.LoadedIndices[i * 3 + 1], (int)mem->model.LoadedIndices[i * 3] + 2 };
 		Vec3f screen_coords[3];
 		glm::vec3 world_coords[3];
-		Vec2f textureUVs[3];
+		glm::vec2 textureUVs[3];
 
 		for (int j = 0; j < 3; j++)
 		{
@@ -664,7 +665,8 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 		//Vec3f n = (world_coords[1] - world_coords[0]) ^ (world_coords[2] - world_coords[0]);
 		n = glm::normalize(n);
 		float intensity = glm::dot(n, light_dir);
-		mem->renderer.renderTriangleInClipSpace(world_coords[0], world_coords[1], world_coords[2], 
+		mem->renderer.renderTriangleInClipSpace(world_coords[0], world_coords[1], world_coords[2],
+			textureUVs[0], textureUVs[1], textureUVs[2],
 			glm::vec3(intensity));
 
 		//for(int i=0;i<3;i++)

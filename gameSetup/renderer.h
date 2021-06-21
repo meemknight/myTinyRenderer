@@ -4,6 +4,12 @@
 #include <vector>
 #include <ivec.h>
 
+struct CpuTexture
+{
+	int w, h;
+	const unsigned char* data;
+};
+
 struct GameWindowBuffer;
 
 struct Renderer
@@ -12,6 +18,7 @@ struct Renderer
 	float h = 0;
 	GameWindowBuffer *windowBuffer;
 	std::vector<float> zBuffer;
+	CpuTexture texture;
 
 	Renderer() {};
 
@@ -20,7 +27,9 @@ struct Renderer
 	void clearDepth();
 
 	void renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1,
-		glm::vec3 T2, glm::vec3 color);
+		glm::vec3 T2,
+		glm::vec2 textureUV0, glm::vec2 textureUV1, glm::vec2 textureUV2,
+		glm::vec3 color);
 
 	glm::ivec2 toScreenCoords(glm::vec2 v);
 	glm::vec2 toScreenCoordsFloat(glm::vec2 v);

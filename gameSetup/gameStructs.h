@@ -9,11 +9,6 @@
 #include "OBJ_Loader.h"
 #include "renderer.h"
 
-struct CpuTexture
-{
-	int w, h;
-	const unsigned char *data;
-};
 
 
 //here you add the memory of the game like so
@@ -30,7 +25,6 @@ struct GameMemory
 
 	objl::Loader model;
 
-	CpuTexture texture;
 	//Model model;
 
 };

@@ -89,7 +89,9 @@ auto depthCalculation = [](float z)->float
 };
 
 
-void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T2, glm::vec3 color)
+void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T2,
+	glm::vec2 textureUV0, glm::vec2 textureUV1, glm::vec2 textureUV2,
+	glm::vec3 color)
 {
 	glm::fvec2 clipMinF = { min(T0.x, T1.x, T2.x), min(T0.y, T1.y, T2.y) };
 	glm::fvec2 clipMaxF = { max(T0.x, T1.x, T2.x), max(T0.y, T1.y, T2.y) };
@@ -124,21 +126,18 @@ void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T
 				continue;
 			}
 
-			//Vec2f uvs[3] = { textureUV0, textureUV1, textureUV2 };
-			//float tu = (1 - u - v) * uvs[0].x + u * uvs[1].x + v * uvs[2].x;
-			//float tv = (1 - u - v) * uvs[0].y + u * uvs[1].y + v * uvs[2].y;
+			glm::vec2 uvs[3] = { textureUV0, textureUV1, textureUV2 };
+			float tu = (1 - u - v) * uvs[0].x + u * uvs[1].x + v * uvs[2].x;
+			float tv = (1 - u - v) * uvs[0].y + u * uvs[1].y + v * uvs[2].y;
 
-			//tu *= mem->texture.w;
-			//tv *= mem->texture.h;
-			//int itu = floor(tu);
-			//int itv = floor(tv);
-			//unsigned char r = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 0];
-			//unsigned char g = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 1];
-			//unsigned char b = mem->texture.data[(itu + itv * mem->texture.w) * 3 + 2];
+			tu *= texture.w;
+			tv *= texture.h;
+			int itu = floor(tu);
+			int itv = floor(tv);
+			unsigned char r = texture.data[(itu + itv * texture.w) * 3 + 0];
+			unsigned char g = texture.data[(itu + itv * texture.w) * 3 + 1];
+			unsigned char b = texture.data[(itu + itv * texture.w) * 3 + 2];
 
-			unsigned char r = 255;
-			unsigned char g = 255;
-			unsigned char b = 255;
 
 			float z = (1 - u - v) * z0 + u * z1 + v * z2; //trilinear interpolation
 			//float depth = depthCalculation(z);
@@ -153,7 +152,7 @@ void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T
 			{
 				zBuffer[x + y * w] = depth;
 				//windowBuffer->drawAt(x, y, r * light, g * light, b * light);
-				windowBuffer->drawAt(x, y, color.r * 255, color.g * 255, color.b * 255);
+				windowBuffer->drawAt(x, y, color.r * r, color.g * g, color.b * b);
 			};
 
 		}
