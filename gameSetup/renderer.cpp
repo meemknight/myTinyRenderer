@@ -141,14 +141,14 @@ void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T
 
 			float z = (1 - u - v) * z0 + u * z1 + v * z2; //trilinear interpolation
 			//float depth = depthCalculation(z);
-			float depth = depthCalculation(z);
+			float depth = z;
 			//if (depth <= -1) { continue; }
 			//todo clip behind camera
 
 			//float light = color.r / 255.f;
 			//float light = 1;
 
-			if (depth < zBuffer[x + y * w]) 
+			if (depth < zBuffer[x + y * w] && depth >= 0 && depth <= 1) 
 			{
 				zBuffer[x + y * w] = depth;
 				//windowBuffer->drawAt(x, y, r * light, g * light, b * light);

@@ -1,6 +1,8 @@
 #include <Windows.h>
 #include "gameStructs.h"
 #include <GL/glew.h>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/transform.hpp>
 
 BOOL WINAPI DllMain(
 	HINSTANCE hinstDLL,
@@ -247,6 +249,9 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 
 	float w = windowBuffer->w;
 	float h = windowBuffer->h;
+
+	w = std::max(1.f, w);
+	h = std::max(1.f, h);
 
 	float speed = 620 * deltaTime;
 
@@ -626,18 +631,20 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 	//	glm::vec3(0.5, 0.6, 1), 
 	//	glm::vec3(1, 1, 1));
 
+	glm::mat4 projMat = glm::perspective(glm::radians(90.f), (float)w / h, 0.1f, 30.f);
 
 	for (int i = 0; i < mem->model.LoadedIndices.size()/3; i++)
 	{
 		std::vector<int> face = { (int)mem->model.LoadedIndices[i * 3], (int)mem->model.LoadedIndices[i * 3 + 1], (int)mem->model.LoadedIndices[i * 3] + 2 };
 		Vec3f screen_coords[3];
 		glm::vec3 world_coords[3];
+		glm::vec4 projected_coords[3];
 		glm::vec2 textureUVs[3];
 
 		for (int j = 0; j < 3; j++)
 		{
 			auto v = mem->model.LoadedVertices[face[j]];
-			v.Position.Z -= 25;
+			v.Position.Z -= 1.5;
 
 			screen_coords[j] = Vec3f( (v.Position.X + 1.f) * w/ 2.f, (v.Position.Y + 1.f) * h / 2.f, v.Position.Z);
 			screen_coords[j].x = floor(screen_coords[j].x);
@@ -646,6 +653,14 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 
 			textureUVs[j].x = v.TextureCoordinate.X;
 			textureUVs[j].y = v.TextureCoordinate.Y;
+
+			projected_coords[j] = glm::vec4(world_coords[j], 1);
+
+			projected_coords[j] = projMat * projected_coords[j];
+
+			projected_coords[j].x /= projected_coords[j].w;
+			projected_coords[j].y /= projected_coords[j].w;
+			projected_coords[j].z /= projected_coords[j].w;
 
 		}
 
@@ -665,9 +680,14 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 		//Vec3f n = (world_coords[1] - world_coords[0]) ^ (world_coords[2] - world_coords[0]);
 		n = glm::normalize(n);
 		float intensity = glm::dot(n, light_dir);
-		mem->renderer.renderTriangleInClipSpace(world_coords[0], world_coords[1], world_coords[2],
-			textureUVs[0], textureUVs[1], textureUVs[2],
-			glm::vec3(intensity));
+		if(intensity > 0)
+		{
+
+			mem->renderer.renderTriangleInClipSpace(projected_coords[0], projected_coords[1], projected_coords[2],
+				textureUVs[0], textureUVs[1], textureUVs[2],
+				glm::vec3(intensity));
+		}
+
 
 		//for(int i=0;i<3;i++)
 		//line(Vec2i(screen_coords[i].x, screen_coords[i].y), Vec2i(screen_coords[(i+1)%3].x, screen_coords[(i + 1) % 3].y), {255,255,255});
