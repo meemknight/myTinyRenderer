@@ -26,7 +26,7 @@ T max(T a, T b, T c, T d)
 }
 
 
-void barycentric2(glm::vec2 p, glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, float& u, float& v)
+void barycentric(glm::vec2 p, glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, float& u, float& v)
 {
 	float x = p.x;
 	float y = p.y;
@@ -119,7 +119,7 @@ void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T
 		{
 			float u = 0;
 			float v = 0;
-			barycentric2(glm::vec2(x, y), t0, t1, t2, u, v);
+			barycentric(glm::vec2(x, y), t0, t1, t2, u, v);
 
 			if (u < 0 || v < 0 || u + v > 1)
 			{

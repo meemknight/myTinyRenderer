@@ -10,6 +10,4 @@ features:
 - [x] proper triangle algorithm
 - [x] blending vertex data
 - [x] texturing
-- [ ] projection
-- [ ] vertex shader
-- [ ] pixel shader
+- [ ] linear interpolation with perspective correct deformations

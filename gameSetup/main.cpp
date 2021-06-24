@@ -686,6 +686,7 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 			mem->renderer.renderTriangleInClipSpace(projected_coords[0], projected_coords[1], projected_coords[2],
 				textureUVs[0], textureUVs[1], textureUVs[2],
 				glm::vec3(intensity));
+
 		}
 
 
