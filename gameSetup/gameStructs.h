@@ -8,7 +8,7 @@
 #include "model.h"
 #include "OBJ_Loader.h"
 #include "renderer.h"
-
+#include "Camera.h"
 
 
 //here you add the memory of the game like so
@@ -24,6 +24,8 @@ struct GameMemory
 	Renderer renderer;
 
 	objl::Loader model;
+
+	gl3d::Camera camera;
 
 	//Model model;
 

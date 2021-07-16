@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <vector>
 #include <ivec.h>
 
@@ -30,6 +31,16 @@ struct Renderer
 		glm::vec3 T2,
 		glm::vec2 textureUV0, glm::vec2 textureUV1, glm::vec2 textureUV2,
 		glm::vec3 color);
+
+	void clipAndRenderTriangleInClipSpace(glm::vec4 T0, glm::vec4 T1,
+		glm::vec4 T2,
+		glm::vec2 textureUV0, glm::vec2 textureUV1, glm::vec2 textureUV2,
+		glm::vec3 color
+	);
+
+	void renderLineClipSpace(glm::vec2 p0, glm::vec2 p1, glm::vec3 color);
+
+
 
 	glm::ivec2 toScreenCoords(glm::vec2 v);
 	glm::vec2 toScreenCoordsFloat(glm::vec2 v);

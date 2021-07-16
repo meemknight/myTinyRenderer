@@ -160,6 +160,7 @@
   <ItemGroup>
     <ClCompile Include="..\gitSubmodule\gl2d\opengl2DLib\gl2d.cpp" />
     <ClCompile Include="..\windowsPlatformLayer\utility.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="freeListAllocator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model.cpp" />
@@ -167,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\windowsPlatformLayer\buildConfig.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="freeListAllocator.h" />
     <ClInclude Include="gameStructs.h" />
     <ClInclude Include="geometry.h" />

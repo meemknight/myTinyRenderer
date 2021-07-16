@@ -96,6 +96,9 @@ void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T
 	glm::fvec2 clipMinF = { min(T0.x, T1.x, T2.x), min(T0.y, T1.y, T2.y) };
 	glm::fvec2 clipMaxF = { max(T0.x, T1.x, T2.x), max(T0.y, T1.y, T2.y) };
 
+	//clipMinF = glm::clamp(clipMinF, { -1,-1 }, { 1, 1 });
+	//clipMaxF = glm::clamp(clipMaxF, { -1,-1 }, { 1, 1 });
+
 	glm::ivec2 clipMin = toScreenCoords(clipMinF);
 	glm::ivec2 clipMax = toScreenCoords(clipMaxF);
 
@@ -174,5 +177,97 @@ glm::vec2 Renderer::toScreenCoordsFloat(glm::vec2 v)
 glm::ivec2 Renderer::toScreenCoords(glm::vec2 v)
 {
 	return toScreenCoordsFloat(v);
+}
+
+void Renderer::clipAndRenderTriangleInClipSpace(glm::vec4 T0, 
+	glm::vec4 T1, glm::vec4 T2, glm::vec2 textureUV0, 
+	glm::vec2 textureUV1, glm::vec2 textureUV2, glm::vec3 color)
+{
+	if (T0.w == 0 || T1.w == 0 || T2.w == 0) { return; }
+
+	glm::vec3 t0 = glm::vec3(T0) / T0.w;
+	glm::vec3 t1 = glm::vec3(T1) / T1.w;
+	glm::vec3 t2 = glm::vec3(T2) / T2.w;
+
+#pragma region backface cull
+
+	float areaParalelogram =
+		t0.x * t1.y - t0.y * t1.x +
+		t1.x * t2.y - t1.y * t2.x +
+		t2.x * t0.y - t2.y * t0.x;
+
+	if (areaParalelogram <= 0) { return; }
+
+#pragma endregion
+
+
+
+	renderTriangleInClipSpace(t0, t1, t2, textureUV0, textureUV1, textureUV2, color);
+
+
+
+
+
+}
+
+void Renderer::renderLineClipSpace(glm::vec2 p0, glm::vec2 p1, glm::vec3 color)
+{
+
+	glm::ivec2 point0 = toScreenCoords(p0);
+	glm::ivec2 point1 = toScreenCoords(p1);
+
+	int x0 = point0.x;
+	int y0 = point0.y;
+	int x1 = point1.x;
+	int y1 = point1.y;
+
+	bool transpose = false;
+	if (std::abs(x1 - x0) < std::abs(y1 - y0))
+	{
+		std::swap(x0, y0);
+		std::swap(x1, y1);
+		transpose = true;
+	}
+
+	if (x0 > x1)
+	{
+		std::swap(x0, x1);
+		std::swap(y0, y1);
+	}
+
+	int dx = x1 - x0;
+	int dy = y1 - y0;
+	float derror = std::abs(dy / (float)dx);
+	float error = 0;
+	int y = y0;
+
+	if (transpose)
+	{
+		for (int x = x0; x < x1; x++)
+		{
+			windowBuffer->drawAt(y, x, color.r * 255.f, color.g * 255.f, color.b * 255.f);
+			error += derror;
+			if (error > .5f)
+			{
+				y += (y1 > y0 ? 1 : -1);
+				error -= 1.f;
+			}
+		}
+	}
+	else
+	{
+		for (int x = x0; x < x1; x++)
+		{
+			windowBuffer->drawAt(x, y, color.r * 255.f, color.g * 255.f, color.b * 255.f);
+			error += derror;
+			if (error > .5f)
+			{
+				y += (y1 > y0 ? 1 : -1);
+				error -= 1.f;
+			}
+		}
+	}
+
+
 }
 

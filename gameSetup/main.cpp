@@ -252,30 +252,6 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 
 	w = std::max(1.f, w);
 	h = std::max(1.f, h);
-
-	float speed = 620 * deltaTime;
-
-	glm::vec2 dir = {};
-
-	if (input->keyBoard[Button::W].held || input->anyController.Up.held)
-	{
-		dir.y -= speed;
-	}
-	if (input->keyBoard[Button::S].held || input->anyController.Down.held)
-	{
-		dir.y += speed;
-	}
-	if (input->keyBoard[Button::A].held || input->anyController.Left.held)
-	{
-		dir.x -= speed;
-	}
-	if (input->keyBoard[Button::D].held || input->anyController.Right.held)
-	{
-		dir.x += speed;
-	}
-
-	dir.x += speed * input->anyController.LThumb.x;
-	dir.y -= speed * input->anyController.LThumb.y;
 	//todo normalize dir;
 
 	windowBuffer->clear();
@@ -290,6 +266,68 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 	{
 		i = INFINITY;
 	}
+
+#pragma region camera
+
+	float speed = 4 * deltaTime;
+
+	glm::vec3 dir = {};
+	if (input->keyBoard[Button::W].held || input->anyController.Up.held)
+	{
+		dir.z -= speed;
+	}
+	if (input->keyBoard[Button::S].held || input->anyController.Down.held)
+	{
+		dir.z += speed;
+	}
+	if (input->keyBoard[Button::A].held || input->anyController.Left.held)
+	{
+		dir.x -= speed;
+	}
+	if (input->keyBoard[Button::D].held || input->anyController.Right.held)
+	{
+		dir.x += speed;
+	}
+
+	if (input->keyBoard[Button::Q].held)
+	{
+		dir.y -= speed;
+	}
+	if (input->keyBoard[Button::E].held)
+	{
+		dir.y += speed;
+	}
+
+	mem->camera.moveFPS(dir);
+
+	{
+		static glm::dvec2 lastMousePos = {};
+		if (input->rightMouse.held)
+		{
+			glm::dvec2 currentMousePos = {};
+			currentMousePos.x = input->mouseX;
+			currentMousePos.y = input->mouseY;
+
+			float speed = 0.8f;
+
+			glm::vec2 delta = lastMousePos - currentMousePos;
+			delta *= speed * deltaTime;
+
+			mem->camera.rotateCamera(delta);
+
+			lastMousePos = currentMousePos;
+		}
+		else
+		{
+			lastMousePos.x = input->mouseX;
+			lastMousePos.y = input->mouseY;
+
+		}
+	}
+
+	mem->camera.aspectRatio = (float)w / h;
+
+#pragma endregion
 
 
 	auto depthCalculation = [](float z)->float
@@ -359,7 +397,6 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 				}
 			}
 		}
-
 
 	};
 
@@ -631,7 +668,16 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 	//	glm::vec3(0.5, 0.6, 1), 
 	//	glm::vec3(1, 1, 1));
 
-	glm::mat4 projMat = glm::perspective(glm::radians(90.f), (float)w / h, 0.1f, 30.f);
+	//glm::mat4 projMat = glm::perspective(glm::radians(90.f), (float)w / h, 0.1f, 30.f);
+	glm::mat4 projMat = mem->camera.getProjectionMatrix() * mem->camera.getWorldToViewMatrix();
+
+
+	//mem->renderer.renderLineClipSpace(glm::vec2(-0.5, -0.5), glm::vec2(0.7,0.7), glm::vec3(1.f));
+
+	//mem->renderer.clipAndRenderTriangleInClipSpace({0,1,-0.5,1}, { -1,-1,-0.5,1 }, { 1,-1,-0.5,1 },
+	//	{ 0,0 }, { 1,0 }, { 0,1 },
+	//		glm::vec3(1.f));
+
 
 	for (int i = 0; i < mem->model.LoadedIndices.size()/3; i++)
 	{
@@ -658,10 +704,6 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 
 			projected_coords[j] = projMat * projected_coords[j];
 
-			projected_coords[j].x /= projected_coords[j].w;
-			projected_coords[j].y /= projected_coords[j].w;
-			projected_coords[j].z /= projected_coords[j].w;
-
 		}
 
 	
@@ -679,13 +721,17 @@ extern "C" __declspec(dllexport) void gameLogic(GameInput * input, GameMemory * 
 		glm::vec3 n = glm::cross((world_coords[2] - world_coords[0]), (world_coords[1] - world_coords[0]));
 		//Vec3f n = (world_coords[1] - world_coords[0]) ^ (world_coords[2] - world_coords[0]);
 		n = glm::normalize(n);
-		float intensity = glm::dot(n, light_dir);
-		if(intensity > 0)
+		float intensity = glm::clamp(glm::dot(n, light_dir), 0.f, 1.f);
+		//if(intensity > 0)
 		{
 
-			mem->renderer.renderTriangleInClipSpace(projected_coords[0], projected_coords[1], projected_coords[2],
+			mem->renderer.clipAndRenderTriangleInClipSpace(projected_coords[0], projected_coords[1], projected_coords[2],
 				textureUVs[0], textureUVs[1], textureUVs[2],
 				glm::vec3(intensity));
+
+			//mem->renderer.renderLineClipSpace(projected_coords[0], projected_coords[1], glm::vec3(1.f));
+			//mem->renderer.renderLineClipSpace(projected_coords[1], projected_coords[2], glm::vec3(1.f));
+			//mem->renderer.renderLineClipSpace(projected_coords[2], projected_coords[0], glm::vec3(1.f));
 
 		}
 

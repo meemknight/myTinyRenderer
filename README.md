@@ -10,4 +10,5 @@ features:
 - [x] proper triangle algorithm
 - [x] blending vertex data
 - [x] texturing
+- [ ] clipping?
 - [ ] linear interpolation with perspective correct deformations
