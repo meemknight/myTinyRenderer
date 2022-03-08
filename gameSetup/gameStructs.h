@@ -9,6 +9,7 @@
 #include "OBJ_Loader.h"
 #include "renderer.h"
 #include "Camera.h"
+#include "profilerLib.h"
 
 
 //here you add the memory of the game like so
@@ -27,6 +28,8 @@ struct GameMemory
 
 	gl3d::Camera camera;
 
+
+	PL::AverageProfiler profiler;
 	//Model model;
 
 };
@@ -335,6 +338,29 @@ struct GameWindowBuffer
 		memory[4 * (x + y * w) + 1] = g; //green
 		memory[4 * (x + y * w) + 2] = r; //red
 		memory[4 * (x + y * w) + 3] = 0; //reserved for alignment
+	}
+
+	void drawAtUnsafe(int x, int y, char r, char g, char b)
+	{
+		y = h - y;
+
+		memory[4 * (x + y * w) + 0] = b; //blue
+		memory[4 * (x + y * w) + 1] = g; //green
+		memory[4 * (x + y * w) + 2] = r; //red
+		//memory[4 * (x + y * w) + 3] = 0; //reserved for alignment
+	}
+
+	void drawAtUnsafeCheck(int x, int y, char r, char g, char b, bool draw)
+	{
+		y = h - y;
+
+		char stub = 0;
+		char *memoryStub[2] = {&stub, memory};
+
+		memoryStub[draw][draw*(4 * (x + y * w) + 0)] = b; //blue
+		memoryStub[draw][draw*(4 * (x + y * w) + 1)] = g; //green
+		memoryStub[draw][draw*(4 * (x + y * w) + 2)] = r; //red
+		//memory[4 * (x + y * w) + 3] = 0; //reserved for alignment
 	}
 
 	void clear(char r = 0, char g = 0, char b = 0)

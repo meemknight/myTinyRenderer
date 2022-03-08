@@ -1,0 +1,14 @@
+0.00582083 s,    7751378 clocks
+
+0.00620042 s,    227438 clocks  branch short circuiting removal version
+
+0.00460632 s,    4341138 clocks  draw at unsafe
+
+0.0121558 s,    8359871 clocks  pixel ownership test remove if
+
+0.00735823 s,    3477837 clocks   
+
+0.00588956 s,    7944439 clocks   removed depth check
+
+0.00413475 s,    3017322 clocks   no clamp
+

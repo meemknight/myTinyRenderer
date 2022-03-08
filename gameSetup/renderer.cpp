@@ -26,7 +26,7 @@ T max(T a, T b, T c, T d)
 }
 
 
-void barycentric(glm::vec2 p, glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, float& u, float& v)
+inline void barycentric(glm::vec2 p, glm::vec2 p0, glm::vec2 p1, glm::vec2 p2, float& u, float& v)
 {
 	float x = p.x;
 	float y = p.y;
@@ -161,8 +161,91 @@ void Renderer::renderTriangleInClipSpace(glm::vec3 T0, glm::vec3 T1, glm::vec3 T
 		}
 	}
 
+}
+
+
+
+void Renderer::renderTriangleInClipSpaceOptimized(glm::vec3 T0, glm::vec3 T1, glm::vec3 T2,
+	glm::vec2 textureUV0, glm::vec2 textureUV1, glm::vec2 textureUV2,
+	glm::vec3 color)
+{
+	glm::fvec2 clipMinF = {min(T0.x, T1.x, T2.x), min(T0.y, T1.y, T2.y)};
+	glm::fvec2 clipMaxF = {max(T0.x, T1.x, T2.x), max(T0.y, T1.y, T2.y)};
+
+	//clipMinF = glm::clamp(clipMinF, { -1,-1 }, { 1, 1 });
+	//clipMaxF = glm::clamp(clipMaxF, { -1,-1 }, { 1, 1 });
+
+	glm::ivec2 clipMin = toScreenCoords(clipMinF);
+	glm::ivec2 clipMax = toScreenCoords(clipMaxF);
+
+	clipMin = glm::clamp(clipMin, {0,0}, {w - 1 , h - 1});
+	clipMax = glm::clamp(clipMax, {0,0}, {w - 1 , h - 1});
+
+	//this are in -1 1 space
+	float z0 = T0.z;
+	float z1 = T1.z;
+	float z2 = T2.z;
+
+	//this are in pixel screen space
+	glm::vec2 t0 = toScreenCoordsFloat(glm::vec2{T0.x, T0.y});
+	glm::vec2 t1 = toScreenCoordsFloat(glm::vec2{T1.x, T1.y});
+	glm::vec2 t2 = toScreenCoordsFloat(glm::vec2{T2.x, T2.y});
+
+	//x, y are in pixel screen space
+	for (int y = clipMin.y; y <= clipMax.y; y++)
+	{
+		for (int x = clipMin.x; x <= clipMax.x; x++)
+		{
+			float u = 0;
+			float v = 0;
+			barycentric(glm::vec2(x, y), t0, t1, t2, u, v);
+
+			if (bool(u < 0) | bool(v < 0) | bool(u + v > 1))
+			{
+				continue;
+			}
+
+			glm::vec2 uvs[3] = {textureUV0, textureUV1, textureUV2};
+			float tu = (1 - u - v) * uvs[0].x + u * uvs[1].x + v * uvs[2].x;
+			float tv = (1 - u - v) * uvs[0].y + u * uvs[1].y + v * uvs[2].y;
+
+			tu = glm::clamp(tu, 0.f, 1.f);
+			tv = glm::clamp(tv, 0.f, 1.f);
+
+			tu *= texture.w;
+			tv *= texture.h;
+			int itu = floor(tu);
+			int itv = floor(tv);
+			unsigned char r = texture.data[(itu + itv * texture.w) * 3 + 0];
+			unsigned char g = texture.data[(itu + itv * texture.w) * 3 + 1];
+			unsigned char b = texture.data[(itu + itv * texture.w) * 3 + 2];
+
+			float z = (1 - u - v) * z0 + u * z1 + v * z2; //trilinear interpolation
+			//float depth = depthCalculation(z);
+			float depth = z;
+			//if (depth <= -1) { continue; }
+			//todo clip behind camera
+
+			//float light = color.r / 255.f;
+			//float light = 1;
+
+			bool passDepth = (bool(depth >= 0) & bool(depth <= 1) & bool(depth < zBuffer[x + y * w]));
+			{
+
+				float stub = 0;
+				float *zBufferStub[2] = {&stub, &zBuffer[0]};
+
+				zBufferStub[passDepth][(x + y * (int)w)*passDepth] = depth;
+
+				//windowBuffer->drawAt(x, y, r * light, g * light, b * light);
+				windowBuffer->drawAtUnsafeCheck(x, y, color.r * r, color.g * g, color.b * b, passDepth);
+			};
+
+		}
+	}
 
 }
+
 
 glm::vec2 Renderer::toScreenCoordsFloat(glm::vec2 v)
 {
@@ -202,9 +285,8 @@ void Renderer::clipAndRenderTriangleInClipSpace(glm::vec4 T0,
 
 
 
-	renderTriangleInClipSpace(t0, t1, t2, textureUV0, textureUV1, textureUV2, color);
-
-
+	//renderTriangleInClipSpace(t0, t1, t2, textureUV0, textureUV1, textureUV2, color);
+	renderTriangleInClipSpaceOptimized(t0, t1, t2, textureUV0, textureUV1, textureUV2, color);
 
 
 
